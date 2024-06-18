@@ -1,0 +1,132 @@
+function [features] = featuresExtraction(baseTrialC3,baseTrialC4, FS, ...
+        right_incides, left_incides, imagnationIncides, nTrials, windowSize,overLap)
+    % the function return a matrix with the data of the signal for each
+    % feature. the function calculate the featurs that we find.
+    % inputs: baseTrialC3/C4 - the original data from each electrode.
+    %FS - sampling rate
+    %right_incides, left_incides - the indicies in which the right / left
+    %motor imagery took place
+    % imagnationIncides - the incidies in which the motor imagery took
+    % place
+    % nTrials - the amount of trails,  windowSize - the size of a single
+    % window for the pwelch function 
+    % overLap - the size of the over laps for the pwelch function 
+    %Outputs - featurs - a matrix with the data of the signal for each
+    % feature [trials* features] 
+   
+    %% Frequncies features
+    %C3
+    figure('Color', 'w', 'Units', 'normalized', 'Position', [0.05, 0.05, 0.7, 0.35], 'WindowState', 'maximized')
+    sgtitle('power bands - C3')
+    
+    % power band 1
+    subplot(3,2,1)
+    freq_band=[0 25];
+    time_range=[5.25 6];
+    powerBandC3_1 = calculate_power_histogram(baseTrialC3,right_incides, left_incides, freq_band,time_range,FS);
+    
+    
+    % power band 2
+    subplot(3,2,2)
+    freq_band=[15 18];
+    time_range=[4.5 6];
+    powerBandC3_2 = calculate_power_histogram(baseTrialC3, right_incides, left_incides, freq_band,time_range,FS);
+    
+    
+    % power band 3
+    subplot(3,2,3)
+    freq_band=[30 42];
+    time_range=[4.7 5.9];
+    powerBandC3_3 = calculate_power_histogram(baseTrialC3, right_incides, left_incides, freq_band,time_range,FS);
+    
+    
+    % power band 4
+    subplot(3,2,4)
+    freq_band=[18 21];
+    time_range=[2.5 3];
+    powerBandC3_4 = calculate_power_histogram(baseTrialC3, right_incides, left_incides, freq_band,time_range,FS);
+    
+    % power band 5
+    subplot(3,2,5)
+    freq_band=[8 13];
+    time_range=[2.5 6];
+    powerBandC3_5 = calculate_power_histogram(baseTrialC3, right_incides, left_incides, freq_band,time_range,FS);
+    
+    
+    %%
+    %C4
+    figure('Color', 'w', 'Units', 'normalized', 'Position', [0.05, 0.05, 0.7, 0.35], 'WindowState', 'maximized')
+    sgtitle('power band - C4')
+    % power band 1
+    subplot(3,2,1)
+    freq_band=[15 18];
+    time_range=[3.5 5.5];
+    powerBandC4_1 = calculate_power_histogram(baseTrialC4, right_incides, left_incides,freq_band,time_range,FS);
+    
+    % power band 2
+    subplot(3,2,2)
+    freq_band=[25 35];
+    time_range=[4 5];
+    powerBandC4_2 = calculate_power_histogram(baseTrialC4, right_incides, left_incides,freq_band,time_range,FS);
+    % 
+    % power band 3
+    subplot(3,2,3)
+    freq_band=[40 44];
+    time_range=[3 4.5];
+    powerBandC4_3 = calculate_power_histogram(baseTrialC4, right_incides, left_incides,freq_band,time_range,FS);
+    
+    % power band 4
+    subplot(3,2,4)
+    freq_band=[18 21];
+    time_range=[2 3];
+    powerBandC4_4 = calculate_power_histogram(baseTrialC4, right_incides, left_incides,freq_band,time_range,FS);
+    
+    % power band 5
+    subplot(3,2,5)
+    freq_band=[8.5 12.5];
+    time_range=[5 5.2];
+    powerBandC4_5 = calculate_power_histogram(baseTrialC4, right_incides, left_incides,freq_band,time_range,FS);
+    
+    % power band 6
+    subplot(3,2,6)
+    freq_band=[8 13];
+    time_range=[2.5 6];
+    powerBandC4_6 = calculate_power_histogram(baseTrialC4, right_incides, left_incides,freq_band,time_range,FS);
+    
+    %% covariance:
+    time_start= 3*FS;
+    time_end= 6*FS;
+    covariance = zeros(1, nTrials);
+    
+    % Compute covariance for each trial
+    for n = 1:nTrials
+        cov_all= cov(baseTrialC3(n,time_start:time_end ), baseTrialC4(n, time_start:time_end));
+        covariance(n) = cov_all(1,2);
+    end
+    
+    figure('Color', 'w', 'Units', 'normalized', 'Position', [0.05, 0.05, 0.7, 0.35], 'WindowState', 'maximized')
+    sgtitle('Covariance between C3 to C4 in 4-6 seconds')
+    create_histogram(covariance,right_incides, left_incides, 20)
+    xlabel('covariance');
+    
+    %% spectral antropy
+    
+    frequencyRangec3 = 10:0.1:40;
+    frequencyRangec4 = 25:0.1:35;
+    spectral_entropy_c3 = CalculateSpectralAntropy(baseTrialC3(:, imagnationIncides), frequencyRangec3, nTrials, windowSize,overLap,FS);
+    spectral_entropy_c4 = CalculateSpectralAntropy(baseTrialC4(:,imagnationIncides), frequencyRangec4, nTrials,  windowSize,overLap,FS);
+         
+    figure('Color', 'w', 'Units', 'normalized', 'Position', [0.05, 0.05, 0.7, 0.35], 'WindowState', 'maximized')
+    subplot(1,2,1)
+    create_histogram(spectral_entropy_c4, right_incides, left_incides, 30)
+    xlabel('spectral antropy')
+    title('Spectral Antropy C4 frequency range 25 - 35');
+    
+    subplot(1,2,2)
+    create_histogram(spectral_entropy_c3, right_incides, left_incides, 30)
+    xlabel('spectral antropy')
+    
+    title('Spectral Antropy C3 frequency range 10-40');
+%% combining features
+    features = [powerBandC3_1;powerBandC3_2;powerBandC3_3;powerBandC3_4;powerBandC3_5;powerBandC4_1;powerBandC4_2;powerBandC4_3;powerBandC4_4;powerBandC4_5;powerBandC4_6;covariance;spectral_entropy_c3';spectral_entropy_c4'];
+end

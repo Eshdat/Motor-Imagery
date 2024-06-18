@@ -1,0 +1,11 @@
+function [welchData, f] = AvaragePwelch(data, windowSize, overLap, nfft , FS)
+    %The function calculate power spectrum in Welch method and return the
+    %avarage power for each frquency and the std.
+    % inputs: data - the record from one electrode in one conditiion (left
+    % / right) in the motor imagary period. [64 * 481].
+    %windowSize - the size of a singel window for the pwelch fi=
+    [welch, f] = pwelch(data, windowSize, overLap, nfft , FS);
+    stdWelch = std(welch',1);
+    meanWelch = mean(welch, 2);
+    welchData = [meanWelch,stdWelch'];
+end
